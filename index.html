@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Our Chats</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background:#efeae2;
+}
+
+/* Header */
+.header{
+  background:#096cbd;
+  color:white;
+  padding:14px;
+  text-align:center;
+  font-weight:600;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+/* Chat container */
+.chat{
+  max-width:650px;
+  margin:auto;
+  padding:12px;
+}
+
+/* Date */
+.date{
+  text-align:center;
+  font-size:12px;
+  color:#666;
+  margin:14px 0;
+}
+
+/* Message bubble */
+.msg{
+  max-width:75%;
+  padding:8px 10px;
+  margin-bottom:6px;
+  border-radius:10px;
+  font-size:14px;
+  line-height:1.4;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+}
+
+/* Her */
+.left{
+  background:white;
+  margin-right:auto;
+  border-bottom-left-radius:2px;
+}
+
+/* You */
+.right{
+  background:#dcf8c6;
+  margin-left:auto;
+  border-bottom-right-radius:2px;
+}
+
+/* Time */
+.time{
+  display:block;
+  text-align:right;
+  font-size:10px;
+  color:#555;
+  margin-top:3px;
+}
+
+/* Media */
+img, video, audio{
+  max-width:100%;
+  border-radius:8px;
+  margin-top:5px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">Mishu</div>
+<div id="chat" class="chat"></div>
+
+<script>
+
+const MY_NAME = "Samuel Manas";  // <<< IMPORTANT: must match chat.json sender exactly
+
+fetch("chat.json")
+.then(r => r.json())
+.then(data => {
+
+  const chat = document.getElementById("chat");
+  let lastDate = "";
+
+  for (let i = 0; i < data.length; i++) {
+
+    const m = data[i];
+    if(!m) continue;
+
+    /* Date separator */
+    if(m.date && m.date !== lastDate){
+      const d = document.createElement("div");
+      d.className = "date";
+      d.textContent = m.date;
+      chat.appendChild(d);
+      lastDate = m.date;
+    }
+
+    const bubble = document.createElement("div");
+    bubble.className = "msg " + (m.sender === MY_NAME ? "right":"left");
+
+    /* TEXT */
+    if(m.type === "text"){
+      if(m.content && m.content.trim() !== ""){
+        bubble.appendChild(document.createTextNode(m.content));
+      } else {
+        continue;
+      }
+    }
+
+    /* IMAGE + STICKER (.webp works automatically) */
+    else if(m.type === "image"){
+      if(!m.file) continue;
+      const img = document.createElement("img");
+      img.src = "media/" + m.file;
+      img.loading = "lazy";
+      bubble.appendChild(img);
+    }
+
+    /* VIDEO */
+    else if(m.type === "video"){
+      if(!m.file) continue;
+      const v = document.createElement("video");
+      v.src = "media/" + m.file;
+      v.controls = true;
+      bubble.appendChild(v);
+    }
+
+    /* AUDIO / VOICE NOTE */
+    else if(m.type === "audio"){
+      if(!m.file) continue;
+      const a = document.createElement("audio");
+      a.src = "media/" + m.file;
+      a.controls = true;
+      bubble.appendChild(a);
+    }
+
+    /* FILE */
+    else if(m.type === "file"){
+      if(!m.file) continue;
+      const f = document.createElement("div");
+      f.textContent = "📎 " + m.file;
+      bubble.appendChild(f);
+    }
+
+    /* Time */
+    if(m.time){
+      const t = document.createElement("span");
+      t.className="time";
+      t.textContent=m.time;
+      bubble.appendChild(t);
+    }
+
+    chat.appendChild(bubble);
+  }
+
+  /* scroll to bottom */
+  setTimeout(()=>{
+    window.scrollTo(0,document.body.scrollHeight);
+  },300);
+
+});
+
+</script>
+
+</body>
+</html>
