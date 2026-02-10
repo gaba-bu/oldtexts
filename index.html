@@ -6,17 +6,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+  #mediaGrid img, #mediaGrid video{
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+  
+  :root{
+  --bg:#efeae2;
+  --header:#075e54;
+  --left:#ffffff;
+  --right:#dcf8c6;
+  --text:#111;
+  --date:#666;
+}
+
+.dark{
+  --bg:#0b141a;
+  --header:#202c33;
+  --left:#202c33;
+  --right:#005c4b;
+  --text:#e9edef;
+  --date:#aebac1;
+}
+
 
 body{
   margin:0;
   font-family: system-ui, -apple-system, sans-serif;
-  background:#efeae2;
+  background:var(--bg);
+color:var(--text);
+
 }
 
 /* Header */
 .header{
-  background:#096cbd;
-  color:white;
+  background:var(--header);
+color:var(--text);
+
   padding:14px;
   text-align:center;
   font-weight:600;
@@ -36,7 +66,8 @@ body{
 .date{
   text-align:center;
   font-size:12px;
-  color:#666;
+  color:var(--date);
+
   margin:14px 0;
 }
 
@@ -54,14 +85,18 @@ body{
 
 /* Her */
 .left{
-  background:white;
+  background:var(--left);
+color:var(--text);
+
   margin-right:auto;
   border-bottom-left-radius:2px;
 }
 
 /* You */
 .right{
-  background:#dcf8c6;
+  background:var(--right);
+color:var(--text);
+
   margin-left:auto;
   border-bottom-right-radius:2px;
 }
@@ -80,6 +115,15 @@ img, video, audio{
   max-width:100%;
   border-radius:8px;
   margin-top:5px;
+
+  #mediaGrid img, #mediaGrid video{
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:8px;
+  cursor:pointer;
+}
+
 }
 
 </style>
@@ -87,8 +131,31 @@ img, video, audio{
 
 <body>
 
-<div class="header">Mishu</div>
+<div class="header">
+  <span>Mishu</span>
+
+  <div style="float:right">
+    <button id="mediaBtn" style="background:none;border:none;color:inherit;font-size:16px;cursor:pointer;margin-right:10px;">📷</button>
+    <button id="themeBtn" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">🌙</button>
+  </div>
+</div>
+
 <div id="chat" class="chat"></div>
+<div id="mediaPanel" style="
+display:none;
+max-width:700px;
+margin:auto;
+padding:10px;
+">
+
+<div id="mediaGrid" style="
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:6px;
+"></div>
+
+</div>
+
 
 <script>
 
@@ -177,6 +244,88 @@ fetch("chat.json")
   setTimeout(()=>{
     window.scrollTo(0,document.body.scrollHeight);
   },300);
+
+  const btn = document.getElementById("themeBtn");
+
+btn.onclick = () => {
+  document.body.classList.toggle("dark");
+
+  if(document.body.classList.contains("dark")){
+    localStorage.setItem("theme","dark");
+    btn.textContent="☀️";
+  }else{
+    localStorage.setItem("theme","light");
+    btn.textContent="🌙";
+  }
+};
+
+// remember theme
+if(localStorage.getItem("theme")==="dark"){
+  document.body.classList.add("dark");
+  btn.textContent="☀️";
+}
+
+const mediaBtn = document.getElementById("mediaBtn");
+const mediaPanel = document.getElementById("mediaPanel");
+const chatBox = document.getElementById("chat");
+const mediaGrid = document.getElementById("mediaGrid");
+
+let mediaBuilt = false;
+
+mediaBtn.onclick = () => {
+
+  if(mediaPanel.style.display === "none"){
+    chatBox.style.display = "none";
+    mediaPanel.style.display = "block";
+    mediaBtn.textContent = "⬅";
+
+    if(!mediaBuilt){
+      buildMediaGallery();
+      mediaBuilt = true;
+    }
+
+  }else{
+    mediaPanel.style.display = "none";
+    chatBox.style.display = "block";
+    mediaBtn.textContent = "📷";
+  }
+};
+
+
+function buildMediaGallery(){
+
+  fetch("chat.json")
+  .then(r=>r.json())
+  .then(data=>{
+
+    data.forEach(m=>{
+
+      if(!m.file) return;
+
+      // images + stickers
+      if(m.type==="image"){
+        const img=document.createElement("img");
+        img.src="media/"+m.file;
+
+        img.onclick=()=>{
+          window.open(img.src,"_blank");
+        };
+
+        mediaGrid.appendChild(img);
+      }
+
+      // videos
+      if(m.type==="video"){
+        const v=document.createElement("video");
+        v.src="media/"+m.file;
+        v.controls=true;
+        mediaGrid.appendChild(v);
+      }
+
+    });
+
+  });
+}
 
 });
 
